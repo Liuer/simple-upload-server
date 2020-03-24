@@ -49,7 +49,6 @@ func init() {
 }
 
 func upload(w http.ResponseWriter, r *http.Request) {
-       fmt.Println("method:", r.Method)
        if r.Method == "GET" {
            crutime := time.Now().Unix()
            h := md5.New()
@@ -58,7 +57,8 @@ func upload(w http.ResponseWriter, r *http.Request) {
 
            t, _ := template.New("upload.html").Parse(uploadTmp)
            t.Execute(w, token)
-       } else {
+       } else if r.Method == "POST" {
+           
            r.ParseMultipartForm(32 << 20)
            file, handler, err := r.FormFile("uploadfile")
            if err != nil {
@@ -66,6 +66,7 @@ func upload(w http.ResponseWriter, r *http.Request) {
                return
            }
            defer file.Close()
+           fmt.Printf("uploading %v to %v", handler.Filename, uploadDir+handler.Filename)
            fmt.Fprintf(w, "%v", handler.Header)
            f, err := os.OpenFile(uploadDir+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
            if err != nil {
@@ -74,6 +75,8 @@ func upload(w http.ResponseWriter, r *http.Request) {
            }
            defer f.Close()
            io.Copy(f, file)
+       } else {
+
        }
 }
 
